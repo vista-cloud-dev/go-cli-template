@@ -2,14 +2,9 @@ package clikit
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
-	"strings"
-	"text/tabwriter"
 
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/table"
 	"golang.org/x/term"
 )
 
@@ -37,6 +32,10 @@ type Diagnostic struct {
 
 // Context carries the resolved output mode + styling into a command's Run.
 // Bind it via clikit.Run; command methods take Run(cc *clikit.Context) error.
+//
+// All styling lives on this one type (see style.go for the toolkit and
+// spinner.go for the live elements). Every primitive is a no-op unless Color
+// is set, so JSON and piped output stay clean automatically.
 type Context struct {
 	Stdout  io.Writer
 	Stderr  io.Writer
@@ -44,15 +43,24 @@ type Context struct {
 	Color   bool
 	Verbose bool
 	Command string
+
 	th      theme
+	gl      Glyph
+	unicode bool
 }
 
 // NewContext resolves the format/color for this invocation from the globals
-// and the TTY state of stdout.
+// and the TTY state of stdout. It also picks the glyph set: full Unicode on a
+// UTF-8 terminal, an ASCII fallback otherwise.
 func NewContext(g *Globals, command string) *Context {
 	tty := term.IsTerminal(int(os.Stdout.Fd()))
 	format := resolveFormat(g.Output, tty)
 	color := format == FormatText && tty && !g.NoColor
+	unicode := supportsUnicode()
+	gl := glyphsUnicode
+	if !unicode {
+		gl = glyphsASCII
+	}
 	return &Context{
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
@@ -61,6 +69,8 @@ func NewContext(g *Globals, command string) *Context {
 		Verbose: g.Verbose,
 		Command: command,
 		th:      newTheme(),
+		gl:      gl,
+		unicode: unicode,
 	}
 }
 
@@ -114,93 +124,4 @@ func writeJSON(w io.Writer, v any) error {
 	enc.SetIndent("", "  ")
 	enc.SetEscapeHTML(false)
 	return enc.Encode(v)
-}
-
-// --- styling helpers (no-ops unless Color) ---
-
-// Title prints a styled section heading.
-func (c *Context) Title(s string) { fmt.Fprintln(c.Stdout, c.th.title.render(c.Color, "▸ "+s)) }
-
-// Accent returns s styled as an accent (or unchanged when !Color).
-func (c *Context) Accent(s string) string { return c.th.accent.render(c.Color, s) }
-
-// Faint returns s styled faint/dim (or unchanged when !Color).
-func (c *Context) Faint(s string) string { return c.th.faint.render(c.Color, s) }
-
-// OK returns s styled as success.
-func (c *Context) OK(s string) string { return c.th.ok.render(c.Color, s) }
-
-// Severity returns an uppercased, colour-coded severity label.
-func (c *Context) Severity(s string) string {
-	label := strings.ToUpper(s)
-	if !c.Color {
-		return label
-	}
-	switch s {
-	case "error":
-		return c.th.errLabel.s.Render(label)
-	case "warning":
-		return lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("214")).Render(label)
-	default:
-		return c.th.faint.s.Render(label)
-	}
-}
-
-// Table renders a styled box table on a TTY, or a clean tab-aligned table
-// otherwise. (JSON mode never calls this — commands emit rows as data.)
-func (c *Context) Table(headers []string, rows [][]string) {
-	if c.Color {
-		t := table.New().
-			Border(lipgloss.NormalBorder()).
-			BorderStyle(c.th.faint.s).
-			Headers(headers...).
-			Rows(rows...).
-			StyleFunc(func(row, _ int) lipgloss.Style {
-				if row == table.HeaderRow {
-					return c.th.header.s.Padding(0, 1)
-				}
-				return lipgloss.NewStyle().Padding(0, 1)
-			})
-		fmt.Fprintln(c.Stdout, t.Render())
-		return
-	}
-	tw := tabwriter.NewWriter(c.Stdout, 0, 2, 2, ' ', 0)
-	fmt.Fprintln(tw, strings.Join(headers, "\t"))
-	for _, r := range rows {
-		fmt.Fprintln(tw, strings.Join(r, "\t"))
-	}
-	_ = tw.Flush()
-}
-
-// --- theme ---
-
-type styled struct{ s lipgloss.Style }
-
-func (x styled) render(color bool, s string) string {
-	if !color {
-		return s
-	}
-	return x.s.Render(s)
-}
-
-type theme struct {
-	title    styled
-	accent   styled
-	faint    styled
-	ok       styled
-	errLabel styled
-	hint     styled
-	header   styled
-}
-
-func newTheme() theme {
-	return theme{
-		title:    styled{lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("141"))},
-		accent:   styled{lipgloss.NewStyle().Foreground(lipgloss.Color("213"))},
-		faint:    styled{lipgloss.NewStyle().Faint(true)},
-		ok:       styled{lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("42"))},
-		errLabel: styled{lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("203"))},
-		hint:     styled{lipgloss.NewStyle().Faint(true).Italic(true)},
-		header:   styled{lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("141"))},
-	}
 }

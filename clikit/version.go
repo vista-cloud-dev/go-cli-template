@@ -1,9 +1,6 @@
 package clikit
 
-import (
-	"fmt"
-	"runtime"
-)
+import "runtime"
 
 // Build metadata, injected at link time:
 //
@@ -31,7 +28,11 @@ type versionInfo struct {
 func (VersionCmd) Run(c *Context) error {
 	info := versionInfo{Version: Version, Commit: Commit, Date: Date, Go: runtime.Version()}
 	return c.Result(info, func() {
-		fmt.Fprintf(c.Stdout, "%s %s\n", c.Accent("version"), info.Version)
-		fmt.Fprintln(c.Stdout, c.Faint(fmt.Sprintf("commit %s · built %s · %s", info.Commit, info.Date, info.Go)))
+		c.KV(
+			[2]string{"version", c.Accent(info.Version)},
+			[2]string{"commit", info.Commit},
+			[2]string{"built", info.Date},
+			[2]string{"go", info.Go},
+		)
 	})
 }

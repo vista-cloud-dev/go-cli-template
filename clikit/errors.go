@@ -50,8 +50,8 @@ func RenderError(c *Context, err error) {
 		_ = writeJSON(c.Stderr, Envelope{SchemaVersion: SchemaVersion, Command: c.Command, OK: false, Exit: e.Exit, Error: e})
 		return
 	}
-	fmt.Fprintf(c.Stderr, "%s %s\n", c.th.errLabel.render(c.Color, "Error:"), e.Message)
+	fmt.Fprintf(c.Stderr, "%s %s\n", c.th.err.render(c.Color, c.gl.Err+" Error:"), e.Message)
 	if e.Hint != "" {
-		fmt.Fprintln(c.Stderr, c.th.hint.render(c.Color, "  hint: "+e.Hint))
+		fmt.Fprintln(c.Stderr, c.th.hint.render(c.Color, "  "+c.gl.Arrow+" hint: "+e.Hint))
 	}
 }

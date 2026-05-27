@@ -13,6 +13,7 @@ look-and-feel can be tuned here before any real tool is built on it.
 
 - **Kong** command grammar — the whole surface is one typed struct (the single source of truth).
 - **TTY-gated [Lipgloss](https://github.com/charmbracelet/lipgloss) styling** — styled help/errors/tables on a terminal; **plain or JSON when piped**. Never blocks scripts or agents.
+- **A professional styling toolkit** (`clikit/style.go`) — an adaptive, semantic palette (light/dark-aware, downsamples truecolor → 256 → 16), a glyph set with an ASCII fallback (`✓ ✗ ⚠ ℹ • → ▸ ●`), and composable primitives: titles, status lines, badges, key/value lists, bulleted lists, rules, panels, trees, and tables — plus a spinner + progress bar (`clikit/spinner.go`). Every primitive is a no-op off a color TTY, so JSON/piped output stays clean.
 - **`--output {text|json|auto}`** — `auto` (default) = styled text on a TTY, JSON when piped/redirected.
 - **A versioned JSON envelope** (`schemaVersion`/`command`/`ok`/`exit`/`data`/`diagnostics`/`error`).
 - **Deterministic error objects + the exit-code ladder** — `0` ok · `1` runtime · `2` usage · `3` `--check`/findings · `4` engine-bound op refused.
@@ -22,7 +23,8 @@ look-and-feel can be tuned here before any real tool is built on it.
 ## Try it (tune the look-and-feel)
 
 ```sh
-go run . greet Ada --greeting howdy --repeat 2   # styled on a TTY
+go run . demo ui                                  # the full styling gallery (glyphs, badges, panels, tree, spinner…)
+go run . greet Ada --greeting howdy --repeat 2    # styled on a TTY
 go run . greet Ada -o json                        # the JSON envelope
 go run . demo table                               # styled box table (TTY) / JSON rows (piped)
 go run . demo diagnostics -o json                 # the diagnostics envelope (lint-style)
@@ -32,7 +34,10 @@ go run . --help
 NO_COLOR=1 go run . greet Ada -o text             # styling off
 ```
 
-Tune colours/labels/layout in `clikit/context.go` (the `theme`) — every tool inherits the change.
+Run `demo ui` on a real terminal to see the toolkit in colour; pipe it (`demo ui | cat`) and it
+falls back to plain glyphs and tab-aligned layout. Tune the palette, glyphs, and primitives in
+`clikit/style.go` (the `theme`, the `Glyph` sets, and the `*Context` styling methods) and the live
+elements in `clikit/spinner.go` — every tool in the toolchain inherits the change.
 
 ## Build (static, reproducible — spec §10)
 
