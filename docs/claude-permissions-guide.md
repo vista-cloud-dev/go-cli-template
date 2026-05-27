@@ -139,16 +139,16 @@ only *reads*. These are the prime candidates for a one-time, user-level pre-appr
 
 ## 3. Audit of your current configs
 
-What's in place today, and what to fix:
+What was found, and the fix status (as of 2026-05-27 — ✅ fixed, ⬜ open):
 
-| # | Finding | Impact | Fix |
+| # | Finding | Impact | Fix & status |
 |---|---|---|---|
-| 1 | **`vista-dev-bridge/.claude/settings.json` sets `"defaultMode": "auto"`** at the *shared-project* level. | **No-op.** Claude Code deliberately ignores a repo granting itself `auto`; only `~/.claude/settings.json` is honored (and only on Opus 4.6+/Sonnet 4.6+). You think you're in auto mode there but you aren't. | Decide deliberately: put `auto` in `~/.claude/settings.json` to get it everywhere, or drop the dead line. |
-| 2 | **Two opposite models coexist.** `vista-iris` allows bare `"Bash"` (= *all* shell) and gates via ask/deny; `tree-sitter-m` uses `dontAsk` + deny (non-interactive). Others accumulate ad-hoc allow lists. | Inconsistent and hard to reason about. Bare `"Bash"` means anything *not* in your ask/deny lists runs silently — including `curl … \| sh`, `sudo …`, etc. | Standardize on the layered **allow + ask + deny** model (§4). Reserve `dontAsk` for genuinely sandboxed repos. |
-| 3 | **`settings.local.json` files are full of one-shot noise** — e.g. a giant `printf` ObjectScript blob, an `awk '/Enterprise Search/…DPTLK7.m'`, specific `…/tasks/<id>.output` paths. These came from "always allow" saving up to 5 literal sub-command rules. | Clutter; they'll never match again. | Periodically prune local files to the genuinely reusable rules. |
-| 4 | **Duplication across repos.** `WebSearch`, `WebFetch(domain:github.com)`, `git add *`, `git commit *`, `git push *` appear in 3–4 separate local files. | You re-grant the same things per repo. | Promote them **once** to `~/.claude/settings.json`; delete the copies. |
-| 5 | **`go-cli-template/.gitignore` has no `.claude` entry**, so `settings.local.json` (personal/machine rules) would be committed. | Personal paths leak into the shared repo. | Add `.claude/settings.local.json` to `.gitignore`; keep `.claude/settings.json` committed for shared rules. |
-| 6 | Your destructive **ask** list in `vista-iris` (rm/prune/clean) is genuinely good. | — | Promote it to user level so every repo inherits it (§6). |
+| 1 | **`vista-dev-bridge/.claude/settings.json` set `"defaultMode": "auto"`** at the *shared-project* level. | **No-op.** Claude Code deliberately ignores a repo granting itself `auto`; only `~/.claude/settings.json` is honored (and only on Opus 4.6+/Sonnet 4.6+). | ✅ **Fixed** — replaced with the Node/TS project file (Appendix C, no `defaultMode`); committed `fed22df`. The dead `auto` line is gone. |
+| 2 | **Two opposite models coexisted.** `vista-iris` allowed bare `"Bash"` (= *all* shell) and gated via ask/deny; `tree-sitter-m` uses `dontAsk` + deny (non-interactive). | Bare `"Bash"` meant anything *not* in the ask/deny lists ran silently — including `curl … \| sh`, `sudo …`, etc. | ✅ **Fixed** — `vista-iris` reconciled from bare `"Bash"` to explicit Appendix F+G allow lists; `tree-sitter-m` deliberately retained as the reserved `dontAsk`+deny sandbox. All other repos use the layered allow+ask+deny model. |
+| 3 | **`settings.local.json` files held one-shot noise** — e.g. a giant `printf` ObjectScript blob, an `awk '/Enterprise Search/…DPTLK7.m'`, `…/tasks/<id>.output` paths, `/tmp/hello` probes. | Clutter; they'll never match again. | ⬜ **Open** — the worst offenders are gone (the `~/.claude`, `vista-dev-bridge`, and `vista-iris` local files no longer exist), but `vista-cloud-dev`, `m-dev-tools`, and `go-cli-template` local files still hold one-shot noise. Prune still pending. |
+| 4 | **Duplication across repos.** `WebSearch`, `WebFetch(domain:github.com)`, `git add/commit/push` appeared in several separate local files. | You re-grant the same things per repo. | ⬜ **Open** — these now live once in `~/.claude/settings.json` (Appendix A), but duplicate copies still remain in the `vista-cloud-dev` and `m-dev-tools` local files, and `go-cli-template`'s local file duplicates its committed Go rules. Removal pending. |
+| 5 | **`go-cli-template/.gitignore` had no `.claude` entry**, so `settings.local.json` (personal/machine rules) would be committed. | Personal paths leak into the shared repo. | ✅ **Fixed** — added `.claude/settings.local.json` to `go-cli-template/.gitignore` (committed `71888fa`); global `~/.config/git/ignore` also covers it. |
+| 6 | Your destructive **ask** list in `vista-iris` (rm/prune/clean) was genuinely good but repo-local. | — | ✅ **Fixed** — the generally-applicable destructive asks (`rm`, `rmdir`, `git rm`, `git clean`) are promoted to `~/.claude/settings.json`; container-specific prune gates live in the per-repo files (Appendix F). |
 
 ---
 
