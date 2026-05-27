@@ -10,3 +10,6 @@ coverage.*
 .idea/
 .vscode/
 *.swp
+
+# Claude Code — personal/machine-local permissions (keep settings.json committed)
+.claude/settings.local.json
