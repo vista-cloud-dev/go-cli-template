@@ -1,9 +1,13 @@
 # Build output
 /dist/
 /bin/
-*.out
 *.test
-coverage.*
+# coverage report artifacts — specific/anchored so they never match a source
+# file named coverage.go (a broad `coverage.*` silently drops it from commits)
+/coverage.out
+coverage.html
+coverage.txt
+*.lcov
 
 # Editor / OS
 .DS_Store
