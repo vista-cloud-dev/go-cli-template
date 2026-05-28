@@ -181,7 +181,7 @@ go-cli-template/
 │   ├── settings.json           # committed: Go build/test/lint/run + make targets pre-approved
 │   └── settings.local.json     # (gitignored) personal/machine-local permission overrides
 ├── docs/
-│   └── claude-permissions-guide.md   # deep dive on Claude Code permission layering
+│   └── claude-permissions-guide-portable.md  # portable two-layer permissions guide + copy-paste templates
 ├── go.mod / go.sum             # module path + pinned dependencies
 ├── LICENSE / NOTICE            # Apache-2.0
 └── .gitignore                  # build output, editor cruft, settings.local.json
@@ -422,8 +422,9 @@ still prompts. The model is layered:
   overrides; never committed (see `.gitignore`).
 
 The full rationale — rule syntax, precedence (`deny → ask → allow`),
-`defaultMode`, secret protection, and per-language allow lists — is in
-[`docs/claude-permissions-guide.md`](docs/claude-permissions-guide.md).
+`defaultMode`, secret protection, per-language allow lists, a greenfield bootstrap, and
+how to audit an existing machine — is in
+[`docs/claude-permissions-guide-portable.md`](docs/claude-permissions-guide-portable.md).
 
 ## Continuous integration
 
