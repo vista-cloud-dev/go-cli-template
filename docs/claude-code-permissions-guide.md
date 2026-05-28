@@ -1,4 +1,4 @@
-# Claude Code Permissions — Portable Gold-Standard Guide
+# Claude Code Permissions Guide
 
 A clean-room, machine-agnostic blueprint for configuring Claude Code permissions so
 that **safe, high-frequency work never prompts**, **dangerous work always confirms**,
