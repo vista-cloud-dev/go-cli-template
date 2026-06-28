@@ -180,8 +180,10 @@ go-cli-template/
 ├── .claude/
 │   ├── settings.json           # committed: Go build/test/lint/run + make targets pre-approved
 │   └── settings.local.json     # (gitignored) personal/machine-local permission overrides
-├── docs/
-│   └── claude-code-permissions-guide.md  # two-layer permissions guide + copy-paste templates
+├── docs/                       # standard layout — README index + guides/design/memory/archive
+│   ├── README.md               #   docs index (the one navigation entry point)
+│   └── guides/
+│       └── claude-code-permissions-guide.md  # two-layer permissions guide + copy-paste templates
 ├── go.mod / go.sum             # module path + pinned dependencies
 ├── LICENSE / NOTICE            # Apache-2.0
 └── .gitignore                  # build output, editor cruft, settings.local.json
@@ -424,7 +426,7 @@ still prompts. The model is layered:
 The full rationale — rule syntax, precedence (`deny → ask → allow`),
 `defaultMode`, secret protection, per-language allow lists, a greenfield bootstrap, and
 how to audit an existing machine — is in
-[`docs/claude-code-permissions-guide.md`](docs/claude-code-permissions-guide.md).
+[`docs/guides/claude-code-permissions-guide.md`](docs/guides/claude-code-permissions-guide.md).
 
 ## Continuous integration
 
