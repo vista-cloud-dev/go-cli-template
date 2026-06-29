@@ -24,7 +24,7 @@ import (
 
 	"github.com/willabides/kongplete"
 
-	"github.com/vista-cloud-dev/go-cli-template/clikit"
+	"github.com/vista-cloud-dev/clikit"
 )
 
 // CLI is the root command grammar. The whole surface is one typed struct —

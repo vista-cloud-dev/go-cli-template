@@ -4,7 +4,8 @@
 
 BIN     ?= hello                       # demo binary name (rename per repo)
 PKG     := github.com/vista-cloud-dev/go-cli-template
-LDPKG   := $(PKG)/clikit
+# version vars (Version/Commit/Date) live in the imported clikit module
+LDPKG   := github.com/vista-cloud-dev/clikit
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
 DATE    ?= $(shell date -u +%Y-%m-%d)
@@ -29,8 +30,10 @@ run: build
 lint:
 	golangci-lint run ./...
 
+# The race detector needs CGO; the rest of the build is CGO-free.
+# Override the file-level CGO_ENABLED=0 just here.
 test:
-	go test $(GOFLAGS) -race -cover ./...
+	CGO_ENABLED=1 go test $(GOFLAGS) -race -cover ./...
 
 tidy:
 	go mod tidy

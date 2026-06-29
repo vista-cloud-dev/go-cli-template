@@ -165,15 +165,10 @@ The flow from process args to rendered output. Your code is just `main.go`
 ```
 go-cli-template/
 ├── main.go                     # YOUR CLI: the Kong command grammar + command Run() bodies
-├── clikit/                     # the shared convention layer (import or copy this)
-│   ├── globals.go              #   Globals: --output, --no-color, --verbose; OutputFormat
-│   ├── run.go                  #   Run(): the single entry point (Kong + completion + dispatch)
-│   ├── context.go              #   Context: resolved format/color; Result()/Diagnostics(); JSON envelope
-│   ├── errors.go               #   Error object, Fail(), RenderError(), the exit-code ladder
-│   ├── style.go                #   styling toolkit: palette, glyphs, Title/Badge/KV/Panel/Tree/Table…
-│   ├── spinner.go              #   live elements: Spinner + Progress (TTY-only, no extra deps)
-│   ├── schema.go               #   `schema` subcommand: reflects the Kong grammar → JSON
-│   └── version.go              #   `version` subcommand: ldflags-stamped build metadata
+│                               #   imports github.com/vista-cloud-dev/clikit — the shared convention
+│                               #   layer (Globals, Run(), Context, Fail()/exit ladder, styling toolkit,
+│                               #   Spinner/Progress, the schema + version subcommands). Updates arrive
+│                               #   via `go get -u`; nothing to vendor or edit in this repo.
 ├── Makefile                    # build / run / lint / test / tidy / schema / dist / clean
 ├── .golangci.yml               # pinned lint config (the single source of truth)
 ├── .github/workflows/ci.yml    # CI: lint + race tests + schema contract + cross-compile matrix
@@ -199,7 +194,7 @@ package main
 import (
 	"os"
 
-	"github.com/vista-cloud-dev/go-cli-template/clikit"
+	"github.com/vista-cloud-dev/clikit"
 )
 
 type CLI struct {
@@ -302,7 +297,7 @@ Your repo depends on this module; convention updates arrive via `go get -u`.
 
 ```sh
 go mod init github.com/you/mytool
-go get github.com/vista-cloud-dev/go-cli-template/clikit
+go get github.com/vista-cloud-dev/clikit
 ```
 
 Then write your `main.go` as shown in [The clikit package](#the-clikit-package)
@@ -321,10 +316,12 @@ cd mytool && rm -rf .git && git init
 
 **Rename checklist** (so everything keeps working):
 
-1. **Module path** — `go mod edit -module github.com/you/mytool`, then update the
-   `clikit` import paths in `main.go` (and any others) to the new module path.
-2. **`Makefile`** — set `BIN` (output binary name) and `PKG` (module path; `LDPKG`
-   and the ldflags version stamp derive from it).
+1. **Module path** — `go mod edit -module github.com/you/mytool`. The `clikit`
+   import in `main.go` points at the shared module (`github.com/vista-cloud-dev/clikit`)
+   and **stays as-is** — only your own internal package paths (if you add any) change.
+2. **`Makefile`** — set `BIN` (output binary name) and `PKG` (your module path).
+   `LDPKG` already points at the imported `clikit` module (where the version vars
+   live) — leave it.
 3. **`main.go`** — change `clikit.Run("hello", "…description…", …)` to your tool's
    name + description; replace the `greet`/`demo` commands with your real ones.
 4. **`docs/`, `NOTICE`, `LICENSE`** — update names/copyright as needed.
@@ -355,7 +352,9 @@ version-stamped via `-ldflags`.
 
 ```sh
 go build -trimpath -ldflags \
-  "-s -w -X <module>/clikit.Version=$VER -X …/clikit.Commit=$SHA -X …/clikit.Date=$DATE" .
+  "-s -w -X github.com/vista-cloud-dev/clikit.Version=$VER \
+       -X github.com/vista-cloud-dev/clikit.Commit=$SHA \
+       -X github.com/vista-cloud-dev/clikit.Date=$DATE" .
 ```
 
 `VERSION`/`COMMIT`/`DATE` default to `git describe` / `git rev-parse` / UTC date,
