@@ -32,6 +32,12 @@ lint:
 
 # The race detector needs CGO; the rest of the build is CGO-free.
 # Override the file-level CGO_ENABLED=0 just here.
+#
+# Coverage is REPORTED (-cover prints per-package %), not GATED, for Go repos —
+# a deliberate org decision (org-conventions-baseline F6): the Go tools here are
+# thin CLIs over the m/v engine seam where the meaningful coverage lives in the M
+# suites (gated 80–85% via `m coverage`). A Go floor would gate mostly-trivial
+# main/flag plumbing. Revisit per-repo if a Go module grows substantial own logic.
 test:
 	CGO_ENABLED=1 go test $(GOFLAGS) -race -cover ./...
 
